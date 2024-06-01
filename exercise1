@@ -1,0 +1,49 @@
+Exercise 1 (SQL) Given the following tables of a DB schema.
+USER (id, username, name, surname, age, address);
+TRAINING_LESSON (id, name, duration, details);
+USER_TRAINING_ASSOCIATION (id, user_id, training_id, training_date);
+
+
+
+a) Write a SQL query to get the list of users who took more than a training lesson in the
+same day, ordered from the most recent lesson date to oldest date
+
+----------------------------------------------------------------------------------------------------------------------------
+
+SELECT u.id, u.username, u.name, u.surname, u.age, u.address, COUNT(uta.training_id) AS lesson_count, uta.training_date
+FROM USER u
+JOIN USER_TRAINING_ASSOCIATION uta ON u.id = uta.user_id
+GROUP BY u.id, uta.training_date
+HAVING COUNT(uta.training_id) > 1
+ORDER BY uta.training_date DESC;
+
+b) Write a SQL query to get the list of users who did not take training lessons in the
+last 2 years
+
+----------------------------------------------------------------------------------------------------------------------------
+
+SELECT id, username, name, surname, age, address
+FROM USER
+WHERE id NOT IN (
+    SELECT DISTINCT user_id
+    FROM USER_TRAINING_ASSOCIATION
+    WHERE training_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 YEAR)
+);
+
+----------------------------------------------------------------------------------------------------------------------------
+
+
+c) Write a SQL query to get the list of courses that have not been attended by users
+having the same name
+
+----------------------------------------------------------------------------------------------------------------------------
+SELECT tl.id, tl.name
+FROM TRAINING_LESSON tl
+LEFT JOIN USER_TRAINING_ASSOCIATION uta ON tl.id = uta.training_id
+LEFT JOIN USER u ON uta.user_id = u.id
+WHERE u.name NOT IN (
+    SELECT DISTINCT u2.name
+    FROM USER u2
+    WHERE u2.id <> u.id
+)
+GROUP BY tl.id, tl.name;
